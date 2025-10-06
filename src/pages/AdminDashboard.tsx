@@ -4,9 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Users, DollarSign, Award } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Plus, TrendingUp, Users, DollarSign, Award, LogOut, Settings } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Affiliate {
   id: string;
@@ -43,11 +44,13 @@ const getTierColor = (tier: string) => {
   return colors[tier] || colors.prata;
 };
 
-const Index = () => {
+const AdminDashboard = () => {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { signOut, profile } = useAuth();
+  const navigate = useNavigate();
 
   const fetchAffiliates = async () => {
     try {
@@ -105,17 +108,30 @@ const Index = () => {
     { leads: 0, sales: 0, earnings: 0 }
   );
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
       <div className="container mx-auto p-6 space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4 py-8">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-purple-500 to-cyan-500 bg-clip-text text-transparent">
-            Sistema de Afiliados
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Gerencie seus afiliados e acompanhe as comissões
-          </p>
+        <div className="flex items-center justify-between">
+          <div className="text-center flex-1 space-y-4 py-8">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-purple-500 to-cyan-500 bg-clip-text text-transparent">
+              Dashboard Administrativo
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              Gerencie seus afiliados e acompanhe as comissões
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sair
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -248,4 +264,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default AdminDashboard;
