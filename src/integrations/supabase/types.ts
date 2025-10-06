@@ -133,6 +133,50 @@ export type Database = {
           },
         ]
       }
+      withdrawal_requests: {
+        Row: {
+          affiliate_code: string
+          amount: number
+          id: string
+          notes: string | null
+          payment_address: string
+          payment_method: string
+          processed_at: string | null
+          requested_at: string
+          status: string
+        }
+        Insert: {
+          affiliate_code: string
+          amount: number
+          id?: string
+          notes?: string | null
+          payment_address: string
+          payment_method: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Update: {
+          affiliate_code?: string
+          amount?: number
+          id?: string
+          notes?: string | null
+          payment_address?: string
+          payment_method?: string
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_affiliate_code_fkey"
+            columns: ["affiliate_code"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

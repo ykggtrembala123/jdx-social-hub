@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.get-affiliate-by-discord-id]
 verify_jwt = false
 
+[functions.request-withdrawal]
+verify_jwt = false
+
 [functions.create-lead]
 verify_jwt = false
 

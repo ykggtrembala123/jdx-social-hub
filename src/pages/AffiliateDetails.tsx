@@ -4,7 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, TrendingUp, DollarSign, Users, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, TrendingUp, DollarSign, Users, Calendar, Wallet, Receipt } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Affiliate {
@@ -37,6 +41,17 @@ interface Lead {
   confirmed_at: string | null;
 }
 
+interface WithdrawalRequest {
+  id: string;
+  amount: number;
+  payment_method: string;
+  payment_address: string;
+  status: string;
+  requested_at: string;
+  processed_at: string | null;
+  notes: string | null;
+}
+
 const getTierEmoji = (tier: string) => {
   const emojis: Record<string, string> = {
     bronze: "🥉",
@@ -61,7 +76,13 @@ const AffiliateDetails = () => {
   const { code } = useParams<{ code: string }>();
   const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
+  const [withdrawalAmount, setWithdrawalAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("pix");
+  const [paymentAddress, setPaymentAddress] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,6 +105,15 @@ const AffiliateDetails = () => {
 
         if (leadsError) throw leadsError;
         setLeads(leadsData || []);
+
+        const { data: withdrawalsData, error: withdrawalsError } = await supabase
+          .from("withdrawal_requests")
+          .select("*")
+          .eq("affiliate_code", code?.toUpperCase())
+          .order("requested_at", { ascending: false });
+
+        if (withdrawalsError) throw withdrawalsError;
+        setWithdrawals(withdrawalsData || []);
       } catch (error: any) {
         toast({
           title: "Erro ao carregar dados",
@@ -97,6 +127,69 @@ const AffiliateDetails = () => {
 
     if (code) fetchData();
   }, [code, toast]);
+
+  const handleWithdrawalRequest = async () => {
+    if (!affiliate) return;
+
+    const amount = parseFloat(withdrawalAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Valor inválido",
+        description: "Por favor, insira um valor válido",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!paymentAddress) {
+      toast({
+        title: "Endereço obrigatório",
+        description: "Por favor, insira sua chave PIX ou endereço crypto",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("request-withdrawal", {
+        body: {
+          affiliateCode: affiliate.code,
+          amount,
+          paymentMethod,
+          paymentAddress
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Solicitação enviada!",
+        description: "Sua solicitação de saque foi enviada com sucesso. Você será notificado no Discord."
+      });
+
+      setWithdrawalDialogOpen(false);
+      setWithdrawalAmount("");
+      setPaymentAddress("");
+      
+      // Refresh withdrawals
+      const { data: withdrawalsData } = await supabase
+        .from("withdrawal_requests")
+        .select("*")
+        .eq("affiliate_code", affiliate.code)
+        .order("requested_at", { ascending: false });
+      
+      if (withdrawalsData) setWithdrawals(withdrawalsData);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao solicitar saque",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -195,6 +288,129 @@ const AffiliateDetails = () => {
             <p className="text-sm text-muted-foreground">Ganhos Pendentes</p>
           </Card>
         </div>
+
+        {/* Withdrawal Section */}
+        <Card className="p-6 border-primary/20">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-purple-500" />
+              Solicitar Saque
+            </h3>
+            <Dialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-purple-500 hover:bg-purple-600">
+                  💰 Sacar Ganhos
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Solicitar Saque</DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados para solicitar o saque dos seus ganhos. Você será notificado no Discord.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Saldo Disponível</Label>
+                    <p className="text-2xl font-bold text-purple-500">
+                      R$ {affiliate.total_earnings.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <Label htmlFor="amount">Valor do Saque</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      placeholder="0.00"
+                      value={withdrawalAmount}
+                      onChange={(e) => setWithdrawalAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="payment-method">Método de Pagamento</Label>
+                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pix">PIX</SelectItem>
+                        <SelectItem value="crypto">Crypto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="payment-address">
+                      {paymentMethod === "pix" ? "Chave PIX" : "Endereço Crypto"}
+                    </Label>
+                    <Input
+                      id="payment-address"
+                      placeholder={paymentMethod === "pix" ? "email@exemplo.com ou telefone" : "0x..."}
+                      value={paymentAddress}
+                      onChange={(e) => setPaymentAddress(e.target.value)}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleWithdrawalRequest} 
+                    disabled={submitting}
+                    className="w-full"
+                  >
+                    {submitting ? "Enviando..." : "Solicitar Saque"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">
+              • Saldo disponível: <span className="font-bold text-purple-500">R$ {affiliate.total_earnings.toFixed(2)}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              • Ganhos pendentes: <span className="font-bold text-yellow-500">R$ {affiliate.pending_earnings.toFixed(2)}</span>
+            </p>
+          </div>
+        </Card>
+
+        {/* Withdrawal History */}
+        {withdrawals.length > 0 && (
+          <Card className="p-6 border-primary/20">
+            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-cyan-500" />
+              Histórico de Saques
+            </h3>
+            <div className="space-y-3">
+              {withdrawals.map((withdrawal) => (
+                <div
+                  key={withdrawal.id}
+                  className="flex items-center justify-between p-4 bg-card/50 rounded-lg border border-border"
+                >
+                  <div>
+                    <p className="font-bold">R$ {withdrawal.amount.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(withdrawal.requested_at).toLocaleDateString("pt-BR")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {withdrawal.payment_method === "pix" ? "PIX" : "Crypto"}: {withdrawal.payment_address}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={
+                      withdrawal.status === "completed" ? "default" :
+                      withdrawal.status === "rejected" ? "destructive" :
+                      "secondary"
+                    }
+                  >
+                    {withdrawal.status === "completed" ? "✅ Pago" :
+                     withdrawal.status === "rejected" ? "❌ Rejeitado" :
+                     withdrawal.status === "approved" ? "✓ Aprovado" :
+                     "⏳ Pendente"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Additional Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
