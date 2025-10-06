@@ -44,17 +44,12 @@ serve(async (req) => {
     const totalProfit = (transactionValue * feePercentage) / 100;
     const affiliateCommission = (totalProfit * affiliate.commission) / 100;
     let cascadeCommission = 0;
+    let cascadeCode = null;
 
+    // Comissão de cascata fixa em 5% do lucro total
     if (affiliate.referred_by) {
-      const { data: cascadeAffiliate } = await supabase
-        .from("affiliates")
-        .select("cascade_commission")
-        .eq("code", affiliate.referred_by)
-        .single();
-
-      if (cascadeAffiliate) {
-        cascadeCommission = (totalProfit * cascadeAffiliate.cascade_commission) / 100;
-      }
+      cascadeCommission = (totalProfit * 5) / 100;
+      cascadeCode = affiliate.referred_by;
     }
 
     const companyProfit = totalProfit - affiliateCommission - cascadeCommission;
@@ -72,6 +67,7 @@ serve(async (req) => {
           total_profit: totalProfit,
           affiliate_commission: affiliateCommission,
           cascade_commission: cascadeCommission,
+          cascade_code: cascadeCode,
           company_profit: companyProfit,
           status: "pending"
         }

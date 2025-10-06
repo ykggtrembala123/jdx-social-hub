@@ -21,6 +21,7 @@ export type Database = {
           code: string
           commission: number
           created_at: string
+          discord_user_id: string | null
           id: string
           name: string
           pending_earnings: number
@@ -39,6 +40,7 @@ export type Database = {
           code: string
           commission?: number
           created_at?: string
+          discord_user_id?: string | null
           id?: string
           name: string
           pending_earnings?: number
@@ -57,6 +59,7 @@ export type Database = {
           code?: string
           commission?: number
           created_at?: string
+          discord_user_id?: string | null
           id?: string
           name?: string
           pending_earnings?: number
@@ -75,6 +78,7 @@ export type Database = {
         Row: {
           affiliate_code: string
           affiliate_commission: number
+          cascade_code: string | null
           cascade_commission: number
           client_name: string | null
           company_profit: number
@@ -90,6 +94,7 @@ export type Database = {
         Insert: {
           affiliate_code: string
           affiliate_commission: number
+          cascade_code?: string | null
           cascade_commission?: number
           client_name?: string | null
           company_profit: number
@@ -105,6 +110,7 @@ export type Database = {
         Update: {
           affiliate_code?: string
           affiliate_commission?: number
+          cascade_code?: string | null
           cascade_commission?: number
           client_name?: string | null
           company_profit?: number

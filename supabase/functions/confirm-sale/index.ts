@@ -92,7 +92,8 @@ serve(async (req) => {
         await supabase
           .from("affiliates")
           .update({
-            cascade_earnings: cascadeAffiliate.cascade_earnings + lead.cascade_commission
+            cascade_earnings: cascadeAffiliate.cascade_earnings + lead.cascade_commission,
+            total_earnings: cascadeAffiliate.total_earnings + lead.cascade_commission
           })
           .eq("code", affiliate.referred_by);
       }
