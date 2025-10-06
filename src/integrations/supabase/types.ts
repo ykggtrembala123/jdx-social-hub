@@ -133,6 +133,71 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          affiliate_code: string | null
+          avatar_url: string | null
+          created_at: string
+          discord_id: string | null
+          discord_username: string | null
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          affiliate_code?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          discord_id?: string | null
+          discord_username?: string | null
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          affiliate_code?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          discord_id?: string | null
+          discord_username?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_affiliate_code_fkey"
+            columns: ["affiliate_code"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
+      system_config: {
+        Row: {
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: number
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       withdrawal_requests: {
         Row: {
           affiliate_code: string
