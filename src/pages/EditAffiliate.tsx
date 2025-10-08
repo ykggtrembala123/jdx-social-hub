@@ -19,6 +19,7 @@ interface Affiliate {
   tier: string;
   referred_by: string | null;
   discord_user_id: string | null;
+  discord_webhook_url: string | null;
 }
 
 const EditAffiliate = () => {
@@ -77,6 +78,7 @@ const EditAffiliate = () => {
           tier: affiliate.tier,
           referred_by: affiliate.referred_by || null,
           discord_user_id: affiliate.discord_user_id || null,
+          discord_webhook_url: affiliate.discord_webhook_url || null,
         },
       });
 
@@ -231,6 +233,19 @@ const EditAffiliate = () => {
                     setAffiliate({ ...affiliate, referred_by: e.target.value || null })
                   }
                   placeholder="Código de quem indicou este afiliado"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="discord_webhook_url">Webhook do Discord (opcional)</Label>
+                <Input
+                  id="discord_webhook_url"
+                  type="url"
+                  value={affiliate.discord_webhook_url || ""}
+                  onChange={(e) =>
+                    setAffiliate({ ...affiliate, discord_webhook_url: e.target.value || null })
+                  }
+                  placeholder="https://discord.com/api/webhooks/..."
                 />
               </div>
 

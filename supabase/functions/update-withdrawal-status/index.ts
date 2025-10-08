@@ -68,9 +68,24 @@ serve(async (req) => {
       );
     }
 
-    // Send Discord notification to affiliate
+    // If withdrawal is completed, subtract amount from affiliate's total_earnings
+    if (status === "completed") {
+      const { error: updateEarningsError } = await supabase
+        .from("affiliates")
+        .update({
+          total_earnings: withdrawal.affiliates.total_earnings - withdrawal.amount
+        })
+        .eq("code", withdrawal.affiliate_code);
+
+      if (updateEarningsError) {
+        console.error("Error updating affiliate earnings:", updateEarningsError);
+        // Don't fail the request if this fails, just log it
+      }
+    }
+
+    // Send Discord notification to affiliate (personal webhook if configured)
     try {
-      const webhookUrl = Deno.env.get("DISCORD_WEBHOOK_URL");
+      const webhookUrl = withdrawal.affiliates.discord_webhook_url || Deno.env.get("DISCORD_WEBHOOK_URL");
       if (webhookUrl) {
         const affiliate = withdrawal.affiliates;
         let statusText = "";

@@ -43,6 +43,7 @@ export type Database = {
           commission: number
           created_at: string
           discord_user_id: string | null
+          discord_webhook_url: string | null
           id: string
           is_active: boolean
           name: string
@@ -63,6 +64,7 @@ export type Database = {
           commission?: number
           created_at?: string
           discord_user_id?: string | null
+          discord_webhook_url?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -83,6 +85,7 @@ export type Database = {
           commission?: number
           created_at?: string
           discord_user_id?: string | null
+          discord_webhook_url?: string | null
           id?: string
           is_active?: boolean
           name?: string

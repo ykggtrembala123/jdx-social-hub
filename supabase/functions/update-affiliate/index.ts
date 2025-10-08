@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { code, name, username, commission, cascade_commission, tier, referred_by, discord_user_id } = await req.json();
+    const { code, name, username, commission, cascade_commission, tier, referred_by, discord_user_id, discord_webhook_url } = await req.json();
 
     if (!code) {
       return new Response(
@@ -35,6 +35,7 @@ serve(async (req) => {
     if (tier !== undefined) updateData.tier = tier;
     if (referred_by !== undefined) updateData.referred_by = referred_by;
     if (discord_user_id !== undefined) updateData.discord_user_id = discord_user_id;
+    if (discord_webhook_url !== undefined) updateData.discord_webhook_url = discord_webhook_url;
 
     // Update affiliate
     const { data: affiliate, error: updateError } = await supabase

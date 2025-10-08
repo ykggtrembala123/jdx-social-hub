@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { WebhookConfig } from "@/components/WebhookConfig";
 
 const AffiliateDashboard = () => {
   const { affiliateData, signOut } = useAuth();
@@ -155,8 +156,14 @@ const AffiliateDashboard = () => {
           </Card>
         </div>
 
+        {/* Webhook Configuration */}
+        <WebhookConfig 
+          affiliateCode={affiliateData?.code || ""} 
+          currentWebhookUrl={affiliateData?.discord_webhook_url || null}
+        />
+
         {/* Recent Leads */}
-        <Card className="p-6 border-primary/20">
+        <Card className="p-6 border-primary/20 mt-6">
           <h2 className="text-xl font-bold mb-4">Leads Recentes</h2>
           <div className="space-y-3">
             {leads && leads.length > 0 ? (

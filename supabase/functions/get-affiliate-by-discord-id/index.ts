@@ -26,11 +26,11 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get affiliate by discord_user_id
+    // Get affiliate by user_id (Discord ID is stored in user_id column)
     const { data: affiliate, error: affiliateError } = await supabase
       .from("affiliates")
       .select("*")
-      .eq("discord_user_id", discordUserId)
+      .eq("user_id", discordUserId)
       .single();
 
     if (affiliateError || !affiliate) {

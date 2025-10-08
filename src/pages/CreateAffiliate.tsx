@@ -73,12 +73,10 @@ const CreateAffiliate = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
       <div className="container mx-auto max-w-2xl space-y-6">
-        <Link to="/">
-          <Button variant="ghost" className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-        </Link>
+        <Button variant="ghost" className="mb-4" onClick={() => navigate("/admin")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
 
         <Card className="p-8 border-primary/20">
           <div className="flex items-center gap-3 mb-6">

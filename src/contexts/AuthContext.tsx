@@ -10,6 +10,7 @@ interface AffiliateData {
   total_leads: number;
   tier: string;
   commission: number;
+  discord_webhook_url?: string | null;
 }
 
 interface AdminData {
