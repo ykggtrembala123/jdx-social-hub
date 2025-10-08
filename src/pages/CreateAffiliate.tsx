@@ -80,7 +80,7 @@ const CreateAffiliate = () => {
         description: `O código ${formData.code.toUpperCase()} foi cadastrado.`
       });
 
-      navigate("/");
+      navigate("/admin");
     } catch (error: any) {
       toast({
         title: "Erro ao criar afiliado",
