@@ -283,7 +283,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_referrals_count: {
+        Args: { affiliate_code: string }
+        Returns: undefined
+      }
     }
     Enums: {
       affiliate_tier: "bronze" | "prata" | "ouro" | "diamante"

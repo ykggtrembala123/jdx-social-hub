@@ -38,6 +38,26 @@ const CreateAffiliate = () => {
 
     try {
       const commission = tierCommissions[formData.tier];
+      const referredByCode = formData.referred_by.toUpperCase() || null;
+
+      // Validar se o código de indicação existe
+      if (referredByCode) {
+        const { data: referrer, error: referrerError } = await supabase
+          .from("affiliates")
+          .select("*")
+          .eq("code", referredByCode)
+          .single();
+
+        if (referrerError || !referrer) {
+          toast({
+            title: "Erro ao criar afiliado",
+            description: `O código de indicação ${referredByCode} não existe.`,
+            variant: "destructive"
+          });
+          setLoading(false);
+          return;
+        }
+      }
 
       const { error } = await supabase.from("affiliates").insert([
         {
@@ -47,11 +67,13 @@ const CreateAffiliate = () => {
           name: formData.name,
           commission,
           tier: formData.tier,
-          referred_by: formData.referred_by.toUpperCase() || null
+          referred_by: referredByCode
         }
       ]);
 
       if (error) throw error;
+
+      // O trigger automático já incrementa o referrals_count
 
       toast({
         title: "Afiliado criado com sucesso!",
