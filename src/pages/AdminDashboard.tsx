@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, TrendingUp, Users, DollarSign, Award, LogOut, Settings } from "lucide-react";
+import { Plus, TrendingUp, Users, DollarSign, Award, LogOut, Settings, Wallet } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,6 +56,7 @@ const AdminDashboard = () => {
       const { data, error } = await supabase
         .from("affiliates")
         .select("*")
+        .eq("is_active", true)
         .order("total_earnings", { ascending: false });
 
       if (error) throw error;
@@ -168,6 +169,24 @@ const AdminDashboard = () => {
               <DollarSign className="h-12 w-12 text-cyan-500/50" />
             </div>
           </Card>
+        </div>
+
+        {/* Admin Actions */}
+        <div className="flex gap-4">
+          <Button 
+            onClick={() => navigate("/admin/withdrawals")}
+            className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
+          >
+            <Wallet className="mr-2 h-4 w-4" />
+            Gerenciar Saques
+          </Button>
+          <Button 
+            onClick={() => navigate("/create-affiliate")}
+            className="flex-1 bg-gradient-to-r from-primary to-purple-500 hover:opacity-90"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Criar Afiliado
+          </Button>
         </div>
 
         {/* Search & Actions */}

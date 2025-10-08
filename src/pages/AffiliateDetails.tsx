@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, TrendingUp, DollarSign, Users, Calendar, Wallet, Receipt } from "lucide-react";
+import { ArrowLeft, TrendingUp, DollarSign, Users, Calendar, Wallet, Receipt, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Affiliate {
   id: string;
@@ -74,6 +86,7 @@ const getTierColor = (tier: string) => {
 
 const AffiliateDetails = () => {
   const { code } = useParams<{ code: string }>();
+  const navigate = useNavigate();
   const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
@@ -83,7 +96,9 @@ const AffiliateDetails = () => {
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentAddress, setPaymentAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
+  const { adminData } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -191,6 +206,34 @@ const AffiliateDetails = () => {
     }
   };
 
+  const handleDeleteAffiliate = async () => {
+    if (!affiliate) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke("delete-affiliate", {
+        body: { code: affiliate.code },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Afiliado desativado",
+        description: "O afiliado foi desativado com sucesso.",
+      });
+
+      navigate("/admin");
+    } catch (error: any) {
+      toast({
+        title: "Erro ao desativar afiliado",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
@@ -222,12 +265,53 @@ const AffiliateDetails = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
       <div className="container mx-auto max-w-6xl space-y-6">
-        <Link to="/">
-          <Button variant="ghost">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar
-          </Button>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link to={adminData ? "/admin" : "/"}>
+            <Button variant="ghost">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar
+            </Button>
+          </Link>
+
+          {adminData && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/affiliate/${code}/edit`)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                Editar
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Desativar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação irá desativar o afiliado <strong>{affiliate?.code}</strong>. 
+                      O afiliado não será excluído permanentemente, apenas marcado como inativo.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAffiliate}
+                      disabled={deleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleting ? "Desativando..." : "Desativar"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
+        </div>
 
         {/* Header Card */}
         <Card className="p-8 border-primary/20">

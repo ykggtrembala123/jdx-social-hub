@@ -20,3 +20,12 @@ verify_jwt = false
 
 [functions.request-withdrawal]
 verify_jwt = false
+
+[functions.update-affiliate]
+verify_jwt = false
+
+[functions.delete-affiliate]
+verify_jwt = false
+
+[functions.update-withdrawal-status]
+verify_jwt = false

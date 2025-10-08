@@ -8,6 +8,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AffiliateDetails from "./pages/AffiliateDetails";
+import CreateAffiliate from "./pages/CreateAffiliate";
+import EditAffiliate from "./pages/EditAffiliate";
+import WithdrawalManagement from "./pages/WithdrawalManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +39,34 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/withdrawals"
+              element={
+                <ProtectedRoute>
+                  <WithdrawalManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-affiliate"
+              element={
+                <ProtectedRoute>
+                  <CreateAffiliate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/affiliate/:code"
+              element={<AffiliateDetails />}
+            />
+            <Route
+              path="/affiliate/:code/edit"
+              element={
+                <ProtectedRoute>
+                  <EditAffiliate />
                 </ProtectedRoute>
               }
             />

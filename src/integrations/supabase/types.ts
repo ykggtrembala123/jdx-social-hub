@@ -44,6 +44,7 @@ export type Database = {
           created_at: string
           discord_user_id: string | null
           id: string
+          is_active: boolean
           name: string
           pending_earnings: number
           referrals_count: number
@@ -63,6 +64,7 @@ export type Database = {
           created_at?: string
           discord_user_id?: string | null
           id?: string
+          is_active?: boolean
           name: string
           pending_earnings?: number
           referrals_count?: number
@@ -82,6 +84,7 @@ export type Database = {
           created_at?: string
           discord_user_id?: string | null
           id?: string
+          is_active?: boolean
           name?: string
           pending_earnings?: number
           referrals_count?: number
@@ -200,6 +203,7 @@ export type Database = {
           description: string | null
           id: string
           key: string
+          notes: string | null
           updated_at: string
           value: number
         }
@@ -207,6 +211,7 @@ export type Database = {
           description?: string | null
           id?: string
           key: string
+          notes?: string | null
           updated_at?: string
           value: number
         }
@@ -214,6 +219,7 @@ export type Database = {
           description?: string | null
           id?: string
           key?: string
+          notes?: string | null
           updated_at?: string
           value?: number
         }
