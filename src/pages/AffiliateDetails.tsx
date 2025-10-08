@@ -95,6 +95,8 @@ const AffiliateDetails = () => {
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("pix");
   const [paymentAddress, setPaymentAddress] = useState("");
+  const [cryptoCoin, setCryptoCoin] = useState("");
+  const [cryptoNetwork, setCryptoNetwork] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
@@ -156,10 +158,28 @@ const AffiliateDetails = () => {
       return;
     }
 
+    if (amount > affiliate.total_earnings) {
+      toast({
+        title: "Saldo insuficiente",
+        description: `Você só pode sacar até R$ ${affiliate.total_earnings.toFixed(2)}`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!paymentAddress) {
       toast({
         title: "Endereço obrigatório",
         description: "Por favor, insira sua chave PIX ou endereço crypto",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (paymentMethod === "crypto" && (!cryptoCoin || !cryptoNetwork)) {
+      toast({
+        title: "Dados incompletos",
+        description: "Por favor, informe a moeda e a rede para pagamento em crypto",
         variant: "destructive"
       });
       return;
@@ -172,7 +192,9 @@ const AffiliateDetails = () => {
           affiliateCode: affiliate.code,
           amount,
           paymentMethod,
-          paymentAddress
+          paymentAddress,
+          cryptoCoin: paymentMethod === "crypto" ? cryptoCoin : null,
+          cryptoNetwork: paymentMethod === "crypto" ? cryptoNetwork : null
         }
       });
 
@@ -186,6 +208,8 @@ const AffiliateDetails = () => {
       setWithdrawalDialogOpen(false);
       setWithdrawalAmount("");
       setPaymentAddress("");
+      setCryptoCoin("");
+      setCryptoNetwork("");
       
       // Refresh withdrawals
       const { data: withdrawalsData } = await supabase
@@ -409,8 +433,12 @@ const AffiliateDetails = () => {
                       value={withdrawalAmount}
                       onChange={(e) => setWithdrawalAmount(e.target.value)}
                       min="0"
+                      max={affiliate.total_earnings}
                       step="0.01"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Máximo: R$ {affiliate.total_earnings.toFixed(2)}
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="payment-method">Método de Pagamento</Label>
@@ -435,6 +463,40 @@ const AffiliateDetails = () => {
                       onChange={(e) => setPaymentAddress(e.target.value)}
                     />
                   </div>
+                  {paymentMethod === "crypto" && (
+                    <>
+                      <div>
+                        <Label htmlFor="crypto-coin">Moeda</Label>
+                        <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a moeda" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="BTC">Bitcoin (BTC)</SelectItem>
+                            <SelectItem value="ETH">Ethereum (ETH)</SelectItem>
+                            <SelectItem value="USDT">Tether (USDT)</SelectItem>
+                            <SelectItem value="USDC">USD Coin (USDC)</SelectItem>
+                            <SelectItem value="BNB">Binance Coin (BNB)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="crypto-network">Rede</Label>
+                        <Select value={cryptoNetwork} onValueChange={setCryptoNetwork}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a rede" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ERC20">Ethereum (ERC20)</SelectItem>
+                            <SelectItem value="TRC20">Tron (TRC20)</SelectItem>
+                            <SelectItem value="BEP20">BSC (BEP20)</SelectItem>
+                            <SelectItem value="BTC">Bitcoin Network</SelectItem>
+                            <SelectItem value="SOL">Solana</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
+                  )}
                   <Button 
                     onClick={handleWithdrawalRequest} 
                     disabled={submitting}

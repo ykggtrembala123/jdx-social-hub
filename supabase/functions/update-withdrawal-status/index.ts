@@ -106,17 +106,28 @@ serve(async (req) => {
             break;
         }
 
+        const fields = [
+          { name: "Afiliado", value: `${affiliate.name} (@${affiliate.username})`, inline: true },
+          { name: "Código", value: affiliate.code, inline: true },
+          { name: "Valor", value: `R$ ${withdrawal.amount.toFixed(2)}`, inline: true },
+          { name: "Método", value: withdrawal.payment_method === "pix" ? "PIX" : "Crypto", inline: true }
+        ];
+
+        if (withdrawal.payment_method === "crypto" && withdrawal.crypto_coin && withdrawal.crypto_network) {
+          fields.push(
+            { name: "Moeda", value: withdrawal.crypto_coin, inline: true },
+            { name: "Rede", value: withdrawal.crypto_network, inline: true },
+            { name: "Endereço Crypto", value: withdrawal.payment_address, inline: false }
+          );
+        } else {
+          fields.push({ name: "Chave PIX", value: withdrawal.payment_address, inline: false });
+        }
+
         const webhookPayload = {
           embeds: [{
             title: statusText,
             color: color,
-            fields: [
-              { name: "Afiliado", value: `${affiliate.name} (@${affiliate.username})`, inline: true },
-              { name: "Código", value: affiliate.code, inline: true },
-              { name: "Valor", value: `R$ ${withdrawal.amount.toFixed(2)}`, inline: true },
-              { name: "Método", value: withdrawal.payment_method === "pix" ? "PIX" : "Crypto", inline: true },
-              { name: "Endereço/Chave", value: withdrawal.payment_address, inline: false },
-            ],
+            fields,
             timestamp: new Date().toISOString()
           }]
         };

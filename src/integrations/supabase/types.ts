@@ -232,6 +232,8 @@ export type Database = {
         Row: {
           affiliate_code: string
           amount: number
+          crypto_coin: string | null
+          crypto_network: string | null
           id: string
           notes: string | null
           payment_address: string
@@ -243,6 +245,8 @@ export type Database = {
         Insert: {
           affiliate_code: string
           amount: number
+          crypto_coin?: string | null
+          crypto_network?: string | null
           id?: string
           notes?: string | null
           payment_address: string
@@ -254,6 +258,8 @@ export type Database = {
         Update: {
           affiliate_code?: string
           amount?: number
+          crypto_coin?: string | null
+          crypto_network?: string | null
           id?: string
           notes?: string | null
           payment_address?: string

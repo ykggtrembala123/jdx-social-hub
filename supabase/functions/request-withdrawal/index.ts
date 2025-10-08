@@ -12,11 +12,18 @@ serve(async (req) => {
   }
 
   try {
-    const { affiliateCode, amount, paymentMethod, paymentAddress } = await req.json();
+    const { affiliateCode, amount, paymentMethod, paymentAddress, cryptoCoin, cryptoNetwork } = await req.json();
 
     if (!affiliateCode || !amount || !paymentMethod || !paymentAddress) {
       return new Response(
         JSON.stringify({ error: "Todos os campos são obrigatórios" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (paymentMethod === "crypto" && (!cryptoCoin || !cryptoNetwork)) {
+      return new Response(
+        JSON.stringify({ error: "Moeda e rede são obrigatórios para pagamento em crypto" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -68,6 +75,8 @@ serve(async (req) => {
         amount,
         payment_method: paymentMethod,
         payment_address: paymentAddress,
+        crypto_coin: cryptoCoin || null,
+        crypto_network: cryptoNetwork || null,
         status: "pending"
       })
       .select()
@@ -85,23 +94,37 @@ serve(async (req) => {
     try {
       const webhookUrl = Deno.env.get("DISCORD_WEBHOOK_URL");
       if (webhookUrl) {
+        const fields = [
+          { name: "Afiliado", value: `${affiliate.name} (@${affiliate.username})`, inline: true },
+          { name: "Código", value: affiliate.code, inline: true },
+          { name: "Valor", value: `R$ ${amount.toFixed(2)}`, inline: true },
+          { name: "Método", value: paymentMethod === "pix" ? "PIX" : "Crypto", inline: true }
+        ];
+
+        if (paymentMethod === "crypto") {
+          fields.push(
+            { name: "Moeda", value: cryptoCoin, inline: true },
+            { name: "Rede", value: cryptoNetwork, inline: true },
+            { name: "Endereço Crypto", value: paymentAddress, inline: false }
+          );
+        } else {
+          fields.push({ name: "Chave PIX", value: paymentAddress, inline: false });
+        }
+
+        fields.push(
+          { name: "Total de Ganhos", value: `R$ ${affiliate.total_earnings.toFixed(2)}`, inline: true },
+          { name: "Total de Vendas", value: affiliate.total_sales.toString(), inline: true },
+          { name: "Total de Leads", value: affiliate.total_leads.toString(), inline: true },
+          { name: "Sub-afiliados", value: affiliate.referrals_count.toString(), inline: true },
+          { name: "Ganhos em Cascata", value: `R$ ${affiliate.cascade_earnings.toFixed(2)}`, inline: true },
+          { name: "Tier", value: affiliate.tier.toUpperCase(), inline: true }
+        );
+
         const webhookPayload = {
           embeds: [{
             title: "💰 Nova Solicitação de Saque",
             color: 0x00ff00,
-            fields: [
-              { name: "Afiliado", value: `${affiliate.name} (@${affiliate.username})`, inline: true },
-              { name: "Código", value: affiliate.code, inline: true },
-              { name: "Valor", value: `R$ ${amount.toFixed(2)}`, inline: true },
-              { name: "Método", value: paymentMethod === "pix" ? "PIX" : "Crypto", inline: true },
-              { name: "Endereço/Chave", value: paymentAddress, inline: false },
-              { name: "Total de Ganhos", value: `R$ ${affiliate.total_earnings.toFixed(2)}`, inline: true },
-              { name: "Total de Vendas", value: affiliate.total_sales.toString(), inline: true },
-              { name: "Total de Leads", value: affiliate.total_leads.toString(), inline: true },
-              { name: "Sub-afiliados", value: affiliate.referrals_count.toString(), inline: true },
-              { name: "Ganhos em Cascata", value: `R$ ${affiliate.cascade_earnings.toFixed(2)}`, inline: true },
-              { name: "Tier", value: affiliate.tier.toUpperCase(), inline: true }
-            ],
+            fields,
             timestamp: new Date().toISOString()
           }]
         };
