@@ -1,151 +1,59 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface Profile {
-  id: string;
-  discord_id: string | null;
-  discord_username: string | null;
-  avatar_url: string | null;
-  role: string;
-  affiliate_code: string | null;
+interface AffiliateData {
+  code: string;
+  name: string;
+  discord_user_id: string;
+  total_earnings: number;
+  total_sales: number;
+  total_leads: number;
+  tier: string;
+  commission: number;
 }
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  profile: Profile | null;
+  affiliateData: AffiliateData | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
-  isAdmin: boolean;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [affiliateData, setAffiliateData] = useState<AffiliateData | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Fetch profile after auth state changes
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-        }
+    // Verifica se há dados do afiliado no localStorage
+    const storedData = localStorage.getItem('affiliate_data');
+    if (storedData) {
+      try {
+        setAffiliateData(JSON.parse(storedData));
+      } catch (error) {
+        console.error('Error parsing affiliate data:', error);
+        localStorage.removeItem('affiliate_data');
       }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error: any) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+  const signOut = () => {
+    localStorage.removeItem('affiliate_data');
+    setAffiliateData(null);
+    toast({
+      title: "Logout realizado",
+      description: "Até logo!"
     });
-    
-    if (error) {
-      toast({
-        title: "Erro ao fazer login",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
-    
-    return { error };
   };
-
-  const signUp = async (email: string, password: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl
-      }
-    });
-    
-    if (error) {
-      toast({
-        title: "Erro ao criar conta",
-        description: error.message,
-        variant: "destructive"
-      });
-    } else {
-      toast({
-        title: "Conta criada!",
-        description: "Verifique seu email para confirmar a conta."
-      });
-    }
-    
-    return { error };
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-  };
-
-  const isAdmin = profile?.role === "admin";
 
   return (
     <AuthContext.Provider 
       value={{ 
-        user, 
-        session, 
-        profile, 
+        affiliateData, 
         loading, 
-        signIn, 
-        signUp, 
-        signOut,
-        isAdmin
+        signOut
       }}
     >
       {children}

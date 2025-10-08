@@ -49,7 +49,6 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { signOut, profile } = useAuth();
   const navigate = useNavigate();
 
   const fetchAffiliates = async () => {
@@ -108,8 +107,7 @@ const AdminDashboard = () => {
     { leads: 0, sales: 0, earnings: 0 }
   );
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
     navigate("/auth");
   };
 

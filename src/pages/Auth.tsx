@@ -4,32 +4,52 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
-import { Lock, Mail, Sparkles } from "lucide-react";
+import { Sparkles, Hash } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [discordId, setDiscordId] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signIn(email, password);
-    setLoading(false);
-    if (!error) {
-      navigate("/dashboard");
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-affiliate-by-discord-id', {
+        body: { discord_user_id: discordId }
+      });
+
+      if (error) throw error;
+
+      if (data && data.affiliate) {
+        // Armazena os dados do afiliado no localStorage
+        localStorage.setItem('affiliate_data', JSON.stringify(data.affiliate));
+        toast({
+          title: "Login realizado!",
+          description: `Bem-vindo, ${data.affiliate.name}!`
+        });
+        navigate("/dashboard");
+      } else {
+        toast({
+          title: "Discord ID não encontrado",
+          description: "Nenhum afiliado encontrado com este Discord ID.",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error logging in:', error);
+      toast({
+        title: "Erro ao fazer login",
+        description: error.message || "Tente novamente mais tarde.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    await signUp(email, password);
-    setLoading(false);
   };
 
   return (
@@ -42,100 +62,33 @@ const Auth = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary via-purple-500 to-cyan-500 bg-clip-text text-transparent">
             Vultos Swap
           </h1>
-          <p className="text-muted-foreground mt-2">Sistema de Afiliados</p>
+          <p className="text-muted-foreground mt-2">Dashboard de Afiliados</p>
         </div>
 
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="signin">Entrar</TabsTrigger>
-            <TabsTrigger value="signup">Criar Conta</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="signin">
-            <form onSubmit={handleSignIn} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signin-email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="border-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signin-password" className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Senha
-                </Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="border-primary/20"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-primary to-purple-500 hover:opacity-90"
-              >
-                {loading ? "Entrando..." : "Entrar"}
-              </Button>
-            </form>
-          </TabsContent>
-
-          <TabsContent value="signup">
-            <form onSubmit={handleSignUp} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="signup-email" className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="border-primary/20"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signup-password" className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Senha
-                </Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="border-primary/20"
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-500 to-cyan-500 hover:opacity-90"
-              >
-                {loading ? "Criando..." : "Criar Conta"}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="discord-id" className="flex items-center gap-2">
+              <Hash className="h-4 w-4" />
+              Discord ID
+            </Label>
+            <Input
+              id="discord-id"
+              type="text"
+              placeholder="Seu Discord ID"
+              value={discordId}
+              onChange={(e) => setDiscordId(e.target.value)}
+              required
+              className="border-primary/20"
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-primary to-purple-500 hover:opacity-90"
+          >
+            {loading ? "Verificando..." : "Acessar Dashboard"}
+          </Button>
+        </form>
       </Card>
     </div>
   );

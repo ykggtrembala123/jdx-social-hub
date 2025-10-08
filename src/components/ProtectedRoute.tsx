@@ -3,11 +3,10 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requireAdmin?: boolean;
 }
 
-export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, profile, loading } = useAuth();
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const { affiliateData, loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,12 +16,8 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     );
   }
 
-  if (!user) {
+  if (!affiliateData) {
     return <Navigate to="/auth" replace />;
-  }
-
-  if (requireAdmin && profile?.role !== "admin") {
-    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
