@@ -1,5 +1,14 @@
 project_id = "oyoifasethtkfkocppzs"
 
+[functions.check-admin]
+verify_jwt = false
+
+[functions.confirm-sale]
+verify_jwt = false
+
+[functions.create-lead]
+verify_jwt = false
+
 [functions.get-affiliate]
 verify_jwt = false
 
@@ -10,10 +19,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.request-withdrawal]
-verify_jwt = false
-
-[functions.create-lead]
-verify_jwt = false
-
-[functions.confirm-sale]
 verify_jwt = false

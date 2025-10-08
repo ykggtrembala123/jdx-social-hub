@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_config: {
+        Row: {
+          created_at: string
+          discord_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          discord_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          discord_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       affiliates: {
         Row: {
           cascade_commission: number

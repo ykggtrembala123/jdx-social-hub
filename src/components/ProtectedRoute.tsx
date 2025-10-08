@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { affiliateData, loading } = useAuth();
+  const { affiliateData, adminData, loading } = useAuth();
 
   if (loading) {
     return (
@@ -16,7 +16,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  if (!affiliateData) {
+  if (!affiliateData && !adminData) {
     return <Navigate to="/auth" replace />;
   }
 

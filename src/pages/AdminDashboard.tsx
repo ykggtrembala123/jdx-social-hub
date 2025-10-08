@@ -107,7 +107,10 @@ const AdminDashboard = () => {
     { leads: 0, sales: 0, earnings: 0 }
   );
 
+  const { signOut } = useAuth();
+
   const handleSignOut = () => {
+    signOut();
     navigate("/auth");
   };
 

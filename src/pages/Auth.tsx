@@ -19,24 +19,46 @@ const Auth = () => {
     setLoading(true);
 
     try {
+      // Primeiro verifica se é admin
+      const { data: adminCheck, error: adminError } = await supabase.functions.invoke('check-admin', {
+        body: { discordId }
+      });
+
+      if (!adminError && adminCheck?.isAdmin) {
+        // É admin - armazena dados e redireciona para admin dashboard
+        const adminData = {
+          discord_id: discordId,
+          name: adminCheck.adminData.name,
+          isAdmin: true
+        };
+        localStorage.setItem('admin_data', JSON.stringify(adminData));
+        toast({
+          title: "Login Admin realizado!",
+          description: `Bem-vindo, ${adminCheck.adminData.name}!`
+        });
+        navigate("/admin");
+        return;
+      }
+
+      // Se não é admin, tenta logar como afiliado
       const { data, error } = await supabase.functions.invoke('get-affiliate-by-discord-id', {
-        body: { discord_user_id: discordId }
+        body: { discordUserId: discordId }
       });
 
       if (error) throw error;
 
-      if (data && data.affiliate) {
+      if (data) {
         // Armazena os dados do afiliado no localStorage
-        localStorage.setItem('affiliate_data', JSON.stringify(data.affiliate));
+        localStorage.setItem('affiliate_data', JSON.stringify(data));
         toast({
           title: "Login realizado!",
-          description: `Bem-vindo, ${data.affiliate.name}!`
+          description: `Bem-vindo, ${data.name}!`
         });
         navigate("/dashboard");
       } else {
         toast({
           title: "Discord ID não encontrado",
-          description: "Nenhum afiliado encontrado com este Discord ID.",
+          description: "Nenhum afiliado ou admin encontrado com este Discord ID.",
           variant: "destructive"
         });
       }
