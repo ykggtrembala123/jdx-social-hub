@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Sparkles, Hash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Auth = () => {
   const [discordId, setDiscordId] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setAdminData, setAffiliateData } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,9 +31,9 @@ const Auth = () => {
         const adminData = {
           discord_id: discordId,
           name: adminCheck.adminData.name,
-          isAdmin: true
+          isAdmin: true as const
         };
-        localStorage.setItem('admin_data', JSON.stringify(adminData));
+        setAdminData(adminData);
         toast({
           title: "Login Admin realizado!",
           description: `Bem-vindo, ${adminCheck.adminData.name}!`
@@ -48,8 +50,8 @@ const Auth = () => {
       if (error) throw error;
 
       if (data) {
-        // Armazena os dados do afiliado no localStorage
-        localStorage.setItem('affiliate_data', JSON.stringify(data));
+        // Armazena os dados do afiliado
+        setAffiliateData(data);
         toast({
           title: "Login realizado!",
           description: `Bem-vindo, ${data.name}!`

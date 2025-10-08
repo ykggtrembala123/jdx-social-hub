@@ -23,6 +23,8 @@ interface AuthContextType {
   adminData: AdminData | null;
   loading: boolean;
   signOut: () => void;
+  setAffiliateData: (data: AffiliateData | null) => void;
+  setAdminData: (data: AdminData | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,6 +61,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading(false);
   }, []);
 
+  const setAffiliateDataAndStore = (data: AffiliateData | null) => {
+    if (data) {
+      localStorage.setItem('affiliate_data', JSON.stringify(data));
+    } else {
+      localStorage.removeItem('affiliate_data');
+    }
+    setAffiliateData(data);
+  };
+
+  const setAdminDataAndStore = (data: AdminData | null) => {
+    if (data) {
+      localStorage.setItem('admin_data', JSON.stringify(data));
+    } else {
+      localStorage.removeItem('admin_data');
+    }
+    setAdminData(data);
+  };
+
   const signOut = () => {
     localStorage.removeItem('affiliate_data');
     localStorage.removeItem('admin_data');
@@ -76,7 +96,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         affiliateData,
         adminData,
         loading, 
-        signOut
+        signOut,
+        setAffiliateData: setAffiliateDataAndStore,
+        setAdminData: setAdminDataAndStore
       }}
     >
       {children}
