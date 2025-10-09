@@ -3,6 +3,12 @@ project_id = "oyoifasethtkfkocppzs"
 [functions.check-admin]
 verify_jwt = false
 
+[functions.generate-otp]
+verify_jwt = false
+
+[functions.verify-otp]
+verify_jwt = false
+
 [functions.confirm-sale]
 verify_jwt = false
 

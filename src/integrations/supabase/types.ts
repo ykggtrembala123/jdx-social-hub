@@ -160,6 +160,36 @@ export type Database = {
           },
         ]
       }
+      otp_codes: {
+        Row: {
+          attempts: number | null
+          code: string
+          created_at: string | null
+          discord_id: string
+          expires_at: string
+          id: string
+          used: boolean | null
+        }
+        Insert: {
+          attempts?: number | null
+          code: string
+          created_at?: string | null
+          discord_id: string
+          expires_at: string
+          id?: string
+          used?: boolean | null
+        }
+        Update: {
+          attempts?: number | null
+          code?: string
+          created_at?: string | null
+          discord_id?: string
+          expires_at?: string
+          id?: string
+          used?: boolean | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           affiliate_code: string | null
@@ -283,6 +313,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_otps: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       increment_referrals_count: {
         Args: { affiliate_code: string }
         Returns: undefined
